@@ -1,3 +1,4 @@
+# https://tech.aru-zakki.com/pytorch-mnist-train/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -7,6 +8,8 @@ import torchvision.transforms as transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+import timm
+import umap
 
 from model import Net
 
@@ -32,7 +35,7 @@ def train_model(model, train_loader, criterion, optimizer, device):
         num_train += len(labels)
         
         # viewで1次元配列に変更
-        images, labels = images.view(-1, 28*28).to(device), labels.to(device)
+        images, labels = images.to(device), labels.to(device)
         optimizer.zero_grad() # 勾配をリセット
         outputs = model(images) # 推論
         loss = criterion(outputs, labels) # lossを計算
@@ -56,7 +59,7 @@ def valid_model(model, valid_loader, criterion, optimizer, device):
     with torch.no_grad():
         for images, labels in valid_loader:
             num_valid += len(labels)
-            images, labels = images.view(-1, 28*28).to(device), labels.to(device)
+            images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             loss = criterion(outputs, labels)
             valid_loss += loss.item()
@@ -100,13 +103,43 @@ def test(model, test_loader, device):
     correct = 0
     label_count = 0
     model.eval()
-    model.load_state_dict(torch.load("model_50.pt"))
+    
     for images, labels in test_loader:
-        outputs = model(images.view(-1, 28*28).to(device))
+        outputs = model(images.to(device))
         _, preds = torch.max(outputs, 1)
         correct += (preds == labels.to(device)).sum().item()
         label_count += len(labels)
     print(f"test accuracy:{correct/label_count*100}%")
+
+
+def feature_map(model, valid_loader, device):
+    model.fc3 = nn.Identity()
+    model.eval()
+    
+    features = None
+    classes = None
+    
+    for images, labels in valid_loader:
+        with torch.no_grad():
+            images = images.to(device)
+            outputs = model(images)
+        if classes is None:
+            classes = labels.cpu()
+        else:
+            classes = torch.cat((classes, labels.cpu()))
+
+        if features is None:
+            features = outputs.cpu()
+        else:
+            features = torch.cat((features, outputs.cpu()))
+    
+    _umap = umap.UMAP(n_components=2, random_state=42)
+    X_umap = _umap.fit_transform(features)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.scatter(X_umap[:, 0], X_umap[:, 1], c=classes)
+    plt.savefig('umap_resnet.jpg')
 
 
 #データセットを作成
@@ -135,7 +168,8 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-model = Net().to(device)
+# model = Net().to(device)
+model = timm.create_model('resnet18', num_classes = 10, in_chans = 1).to(device)
 
 # 損失関数の設定
 criterion = nn.CrossEntropyLoss()
@@ -143,10 +177,11 @@ criterion = nn.CrossEntropyLoss()
 # 最適化手法を設定
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-num_epochs = 50
+num_epochs = 10
 train_loss_list, valid_loss_list = run(model, train_loader, valid_loader, criterion, optimizer, num_epochs, device=device)
 
-torch.save(model.state_dict(), "model_50.pt")
+torch.save(model.state_dict(), "resnet18.pt") # モデルを保存
 plot_loss_graph(train_loss_list, valid_loss_list)
 
+feature_map(model, valid_loader, device)
 test(model, test_loader, device)

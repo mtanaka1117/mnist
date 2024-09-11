@@ -10,6 +10,7 @@ class Net(nn.Module):
         self.fc3 = nn.Linear(512, 10)
 
     def forward(self, x): # x : 入力
+        x = x.view(-1, 28*28)
         z1 = F.relu(self.fc1(x))
         z2 = F.relu(self.fc2(z1))
         y = self.fc3(z2)
