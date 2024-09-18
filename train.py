@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import timm
 import umap
+from torchvision.datasets import ImageFolder
 
 from model import Net
 
@@ -23,7 +24,6 @@ def setup_all_seed(seed=0):
 
 
 def train_model(model, train_loader, criterion, optimizer, device):
-    # 1epoch training 
     train_loss = 0.0
     num_train = 0
 
@@ -47,7 +47,7 @@ def train_model(model, train_loader, criterion, optimizer, device):
     return train_loss
 
 
-def valid_model(model, valid_loader, criterion, optimizer, device):
+def valid_model(model, valid_loader, criterion, device):
     # 評価用のコード
     valid_loss = 0.0
     num_valid = 0
@@ -177,7 +177,7 @@ criterion = nn.CrossEntropyLoss()
 # 最適化手法を設定
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-num_epochs = 10
+num_epochs = 50
 train_loss_list, valid_loss_list = run(model, train_loader, valid_loader, criterion, optimizer, num_epochs, device=device)
 
 torch.save(model.state_dict(), "resnet18.pt") # モデルを保存
