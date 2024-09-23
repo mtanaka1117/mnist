@@ -1,7 +1,7 @@
 # mnist
 
 1. setup
-        ./run.sh
+```./run.sh```
 
 2. train
-        python train.py
+```python train.py```
