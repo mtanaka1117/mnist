@@ -75,7 +75,7 @@ def run(model, train_loader, valid_loader, criterion, optimizer, num_epochs, dev
 
     for epoch in range(num_epochs):
         train_loss = train_model(model, train_loader, criterion, optimizer, device=device)
-        valid_loss = valid_model(model, valid_loader, criterion, optimizer, device=device)
+        valid_loss = valid_model(model, valid_loader, criterion, device=device)
 
         print(f'Epoch [{epoch+1}], train_Loss : {train_loss:.5f}, val_Loss : {valid_loss:.5f}')
         
@@ -168,8 +168,8 @@ test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size,
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-# model = Net().to(device)
-model = timm.create_model('resnet18', num_classes = 10, in_chans = 1).to(device)
+model = Net().to(device)
+# model = timm.create_model('resnet18', num_classes = 10, in_chans = 1).to(device)
 
 # 損失関数の設定
 criterion = nn.CrossEntropyLoss()
@@ -180,7 +180,7 @@ optimizer = optim.SGD(model.parameters(), lr=0.01)
 num_epochs = 50
 train_loss_list, valid_loss_list = run(model, train_loader, valid_loader, criterion, optimizer, num_epochs, device=device)
 
-torch.save(model.state_dict(), "resnet18.pt") # モデルを保存
+torch.save(model.state_dict(), "model_50.pt") # モデルを保存
 plot_loss_graph(train_loss_list, valid_loss_list)
 
 feature_map(model, valid_loader, device)

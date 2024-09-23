@@ -6,16 +6,16 @@ import glob
 import timm
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
-# model = Net().to(device)
+model = Net().to(device)
 # model.load_state_dict(torch.load("model_50.pt"))
 
-model = timm.create_model('resnet18', num_classes = 10, in_chans = 1).to(device)
+# model = timm.create_model('resnet18', num_classes = 10, in_chans = 1).to(device)
 # model.load_state_dict(torch.load("resnet18.pt"))
-model.load_state_dict(torch.load("fine_tuned_model.pt"))
+model.load_state_dict(torch.load("finetuned_model.pt"))
 model.eval()
 
 
-PATH = "./cropped_img/**/"
+PATH = "./test_dataset/**/"
 files = glob.glob(PATH + '*.jpg')
 
 with torch.no_grad():

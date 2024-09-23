@@ -1,3 +1,4 @@
 data/*
 *.pt
 cropped_img/*
+test_dataset/*
