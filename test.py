@@ -13,6 +13,11 @@ import pandas as pd
 
 from model import Net
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+args = parser.parse_args()
+
 
 def test(model, test_loader, device):
     correct = 0
@@ -40,10 +45,9 @@ def test(model, test_loader, device):
 
     plt.figure(figsize=(10,7))
     df_cm = pd.DataFrame(cm, range(10), range(10))
-    sn.set(font_scale=1.3)
     sn.heatmap(df_cm, annot=True, annot_kws={'size': 12}, cmap='Blues')
     plt.suptitle('Confusion Matrix', fontsize=16)
-    plt.savefig('confusion matrix.png')
+    plt.savefig('confusion_matrix.png')
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -56,6 +60,6 @@ transform = transforms.Compose([transforms.ToTensor(),
                                 transforms.Normalize((0.1307,), (0.3081,))])
 
 test_dataset = ImageFolder('./test_dataset', transform)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
 test(model, test_loader, device)

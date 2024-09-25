@@ -9,6 +9,12 @@ from torchvision.datasets import ImageFolder
 
 from model import Net
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--epochs', type=int, default=50, help='Number of epochs')
+parser.add_argument('--batch_size', type=int, default=32, help='batch size')
+args = parser.parse_args()
+
 
 dir_path = './finetune_dataset/'
 transform = transforms.Compose([transforms.ToTensor(),
@@ -18,7 +24,7 @@ transform = transforms.Compose([transforms.ToTensor(),
                                 transforms.Normalize((0.1307,), (0.3081,))])
 
 dataset = ImageFolder(dir_path, transform)
-train_loader = torch.utils.data.DataLoader(dataset, batch_size=32, shuffle=True)
+train_loader = torch.utils.data.DataLoader(dataset, batch_size=args.batch_size, shuffle=True)
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 model = Net().to(device)
@@ -35,8 +41,7 @@ optimizer = optim.Adam(model.fc2.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 model.train()
 
-num_epochs = 50
-for epoch in range(num_epochs):
+for epoch in range(args.epochs):
     train_loss = 0.0
     num_train = 0
     

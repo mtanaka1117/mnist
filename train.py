@@ -1,4 +1,3 @@
-# https://tech.aru-zakki.com/pytorch-mnist-train/
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,6 +10,13 @@ from tqdm import tqdm
 import umap
 
 from model import Net
+
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument('--epochs', type=int, default=50, help='Number of epochs')
+parser.add_argument('--batch_size', type=int, default=64, help='batch size')
+args = parser.parse_args()
+
 
 def setup_all_seed(seed=0):
     np.random.seed(seed)
@@ -112,6 +118,7 @@ def feature_map(model, valid_loader, device):
         with torch.no_grad():
             images = images.to(device)
             outputs = model(images)
+
         if classes is None:
             classes = labels.cpu()
         else:
@@ -122,13 +129,13 @@ def feature_map(model, valid_loader, device):
         else:
             features = torch.cat((features, outputs.cpu()))
     
-    _umap = umap.UMAP(n_components=2, random_state=42)
+    _umap = umap.UMAP(random_state=42)
     X_umap = _umap.fit_transform(features)
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.scatter(X_umap[:, 0], X_umap[:, 1], c=classes)
-    plt.savefig('umap_resnet.jpg')
+    plt.savefig('umap.png')
 
 
 dataset = torchvision.datasets.MNIST(root='./data', train=True,
@@ -145,10 +152,9 @@ test_dataset = torchvision.datasets.MNIST(root='./data', train=False,
                                             download = True)
 
 setup_all_seed()
-batch_size = 64
-train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=batch_size,shuffle=False)
-test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True)
+valid_loader = torch.utils.data.DataLoader(valid_dataset, batch_size=args.batch_size, shuffle=False)
+test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=args.batch_size, shuffle=False)
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -157,11 +163,9 @@ model = Net().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
-num_epochs = 50
-train_loss_list, valid_loss_list = run(model, train_loader, valid_loader, criterion, optimizer, num_epochs, device=device)
+train_loss_list, valid_loss_list = run(model, train_loader, valid_loader, criterion, optimizer, args.epochs, device=device)
 
-torch.save(model.state_dict(), "model_50.pt") # save model
+torch.save(model.state_dict(), "model_{}.pt".format(args.epochs)) # save model
 plot_loss_graph(train_loss_list, valid_loss_list)
 
-feature_map(model, valid_loader, device)
 test(model, test_loader, device)
