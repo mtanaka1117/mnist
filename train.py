@@ -8,7 +8,6 @@ import torchvision.transforms as transforms
 import numpy as np
 import matplotlib.pyplot as plt
 from tqdm import tqdm
-import timm
 import umap
 from torchvision.datasets import ImageFolder
 
