@@ -11,7 +11,7 @@ class Net(nn.Module):
         self.fc1 = nn.Linear(64 * 7 * 7, 128)
         self.fc2 = nn.Linear(128, 10)
 
-    def forward(self, x): # x : 入力
+    def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.pool(F.relu(self.conv2(x)))
         x = x.view(-1, 64 * 7 * 7)

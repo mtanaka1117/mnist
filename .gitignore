@@ -1,4 +1,4 @@
 data/*
 *.pt
-cropped_img/*
+finetune_dataset/*
 test_dataset/*
